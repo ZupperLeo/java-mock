@@ -1,5 +1,6 @@
 package br.com.alura.leilao.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -34,7 +35,15 @@ class FinalizarLeilaoServiceTest {
 	void deveriaFinalizarUmLeilao() {
 		List<Leilao> leiloes = leiloes();
 		
-		service.finalizarLeiloesExpirados();		
+		Mockito.when(dao.buscarLeiloesExpirados()).thenReturn(leiloes);
+		
+		service.finalizarLeiloesExpirados();
+		
+		Leilao leilao = leiloes.get(0);
+		assertTrue(leilao.isFechado());
+		assertEquals(new BigDecimal("900"), leilao.getLanceVencedor().getValor());
+		
+		Mockito.verify(dao).salvar(leilao);
 	}
 	
 	private List<Leilao> leiloes() {
