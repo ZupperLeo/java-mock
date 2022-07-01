@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import br.com.alura.leilao.model.Usuario;
@@ -13,32 +15,39 @@ import br.com.alura.leilao.util.JPAUtil;
 class UsuarioDaoTest {
 
 	private UsuarioDao dao;
+	private EntityManager manager;
+	
+	@BeforeEach
+	public void beforeEach() {
+		this.manager = JPAUtil.getEntityManager();
+		this.dao = new UsuarioDao(manager);
+		manager.getTransaction().begin();
+	}
+	
+	@AfterEach
+	public void afterEach() {
+		manager.getTransaction().rollback();
+	}
+	
 	
 	@Test
-	void deveriaBuscarUmUsuarioCadastradoPeloUsername() {
-		EntityManager manager = JPAUtil.getEntityManager();
-		this.dao = new UsuarioDao(manager);
+	void deveriaBuscarUmUsuarioCadastradoPeloUsername() {		
+		Usuario usuario = criarUsuario();
 		
-		Usuario novoUsuario = new Usuario("teste", "teste@email.com", "12345678");
-		manager.getTransaction().begin();
-		manager.persist(novoUsuario);
-		manager.getTransaction().commit();
-		
-		Usuario usuario = dao.buscarPorUsername(novoUsuario.getNome());
-		assertNotNull(usuario);
+		Usuario encontrado = dao.buscarPorUsername(usuario.getNome());
+		assertNotNull(encontrado);
 	}
 
 	@Test
 	void naoDeveriaBuscarUmUsuarioNaoCadastradoPeloUsername() {
-		EntityManager manager = JPAUtil.getEntityManager();
-		this.dao = new UsuarioDao(manager);
-		
-		Usuario novoUsuario = new Usuario("fulano", "fulano@email.com", "12345678");
-		manager.getTransaction().begin();
-		manager.persist(novoUsuario);
-		manager.getTransaction().commit();
-		
+		criarUsuario();
 		assertThrows(NoResultException.class, () -> this.dao.buscarPorUsername("beltrano"));
+	}
+	
+	private Usuario criarUsuario() {
+		Usuario usuario = new Usuario("fulano", "fulano@email.com", "12345678");
+		manager.persist(usuario);
+		return usuario;
 	}
 
 }
